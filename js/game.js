@@ -51,31 +51,42 @@ Client.socket.on('allplayers', function(data) {
     }
 });
 
+Client.socket.on('moveL', function(id) {
+    moveLeft(id);
+})
+
 Client.socket.on('remove', function(id) {
     removePlayer(id);
 });
 
 
-
-
-
 function update() {
-	/*
-        playerMap[i].body.velocity.x = 0;
-        playerMap[i].body.velocity.y = 0;
 
-        if (keybord.left.isDown) {
-            playerMap[i].body.velocity.x = -150;
-        } else if (keybord.right.isDown) {
-            playerMap[i].body.velocity.x = 150;
-        } else if (keybord.down.isDown) {
-            playerMap[i].body.velocity.y = 150;
-        } else if (keybord.up.isDown) {
-            playerMap[i].body.velocity.y = -150;
-        }
-	*/
+
+
+    //playerMap[i].body.velocity.x = 0;
+    //playerMap[i].body.velocity.y = 0;
+    if (keybord.left.isDown) {
+        (function moveLeft(id) {
+           
+            console.log(playerMap[id]);
+            //player.body.velocity.x = -150;
+        })();
+    } else if (keybord.right.isDown) {
+        //playerMap[i].body.velocity.x = 150;
+    } else if (keybord.down.isDown) {
+        //playerMap[i].body.velocity.y = 150;
+    } else if (keybord.up.isDown) {
+        //playerMap[i].body.velocity.y = -150;
+    }
 }
 
+
+
+
+/*function moveRight(id, x) {
+
+}*/
 
 function render() {
 
