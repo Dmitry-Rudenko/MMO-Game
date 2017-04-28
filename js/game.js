@@ -24,6 +24,8 @@ function preload() {
 
 function create() {
     game.physics.startSystem(Phaser.Physics.ARCADE);
+    game.time.desiredFps = 60;
+    game.time.slowMotion = 1;
     bg = game.add.tileSprite(0, 0, 1000, 500, 'map');
     Client.askNewPlayer();
     addNewPlayer = function(id, x, y) {
@@ -85,34 +87,26 @@ function controller() {
         Client.socket.on('eventClient', function(data) {
             updatePos(data.id, data.x, data.y);
         });
-        Client.socket.emit('eventServer', { unit_x : -1, unit_y : 0});
-        //player.body.velocity.x = -150;
+        Client.socket.emit('eventServer', { unit_x : -1, unit_y : 0});        
     } else if (keybord.right.isDown) {
         Client.socket.on('eventClient', function(data) {
             updatePos(data.id, data.x, data.y);
         });
         Client.socket.emit('eventServer', { unit_x : 1, unit_y : 0});
-        //playerMap[i].body.velocity.x = 150;
     } else if (keybord.down.isDown) {
         Client.socket.on('eventClient', function(data) {
             updatePos(data.id, data.x, data.y);
         });
         Client.socket.emit('eventServer', { unit_x : 0, unit_y : 1});
-        //playerMap[i].body.velocity.y = 150;
     } else if (keybord.up.isDown) {
         Client.socket.on('eventClient', function(data) {
             updatePos(data.id, data.x, data.y);
         });
         Client.socket.emit('eventServer', { unit_x : 0, unit_y : -1});
-        //playerMap[i].body.velocity.y = -150;
     }
 }
 
 
-
-/*function moveRight(id, x) {
-
-}*/
 
 function render() {
 
