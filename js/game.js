@@ -1,3 +1,5 @@
+
+
 var game = new Phaser.Game(1000, 500, Phaser.CANVAS, 'phaser-example', { preload: preload, create: create, update: update, render: render });
 
 var bg;
