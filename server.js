@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io').listen(server);
+var port = process.env.PORT || 3000;
 
 app.use('/css', express.static(__dirname + '/css'));
 app.use('/js', express.static(__dirname + '/js'));
@@ -50,6 +51,6 @@ function randomInt(low, high) {
     return Math.floor(Math.random() * (high - low) + low);
 }
 
-server.listen(3000, function() { // Listens to port 3000
-    console.log('Listening on ' + server.address().port);
+server.listen(port, function() { // Listens to port 3000
+    console.log('Listening on ' + port);
 });
