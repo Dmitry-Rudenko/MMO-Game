@@ -5,7 +5,10 @@ var addNewPlayer;
 var playerMap = {};
 var keybord;
 var removePlayer;
+var updatePos;
+var moveLeft;
 var i;
+
 
 var Client = {};
 Client.socket = io.connect();
@@ -31,10 +34,18 @@ function create() {
         playerMap[id].destroy();
         delete playerMap[id];
     };
+    updatePos = function(id,x,y) {
+        playerMap[id].x += x;
+        playerMap[id].y += y;
+    }
 
     keybord = game.input.keyboard.createCursorKeys();
 
+
 };
+
+
+
 
 Client.askNewPlayer = function() {
     Client.socket.emit('newplayer');
@@ -51,36 +62,51 @@ Client.socket.on('allplayers', function(data) {
     }
 });
 
-Client.socket.on('moveL', function(id) {
-    moveLeft(id);
-})
-
 Client.socket.on('remove', function(id) {
     removePlayer(id);
 });
 
 
+
+
+
+
 function update() {
-
-
-
+    controller();
     //playerMap[i].body.velocity.x = 0;
     //playerMap[i].body.velocity.y = 0;
+}
+
+
+
+
+function controller() {
     if (keybord.left.isDown) {
-        (function moveLeft(id) {
-           
-            console.log(playerMap[id]);
-            //player.body.velocity.x = -150;
-        })();
+        Client.socket.on('eventClient', function(data) {
+            updatePos(data.id, data.x, data.y);
+        });
+        Client.socket.emit('eventServer', { unit_x : -1, unit_y : 0});
+        //player.body.velocity.x = -150;
     } else if (keybord.right.isDown) {
+        Client.socket.on('eventClient', function(data) {
+            updatePos(data.id, data.x, data.y);
+        });
+        Client.socket.emit('eventServer', { unit_x : 1, unit_y : 0});
         //playerMap[i].body.velocity.x = 150;
     } else if (keybord.down.isDown) {
+        Client.socket.on('eventClient', function(data) {
+            updatePos(data.id, data.x, data.y);
+        });
+        Client.socket.emit('eventServer', { unit_x : 0, unit_y : 1});
         //playerMap[i].body.velocity.y = 150;
     } else if (keybord.up.isDown) {
+        Client.socket.on('eventClient', function(data) {
+            updatePos(data.id, data.x, data.y);
+        });
+        Client.socket.emit('eventServer', { unit_x : 0, unit_y : -1});
         //playerMap[i].body.velocity.y = -150;
     }
 }
-
 
 
 
