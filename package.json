@@ -1,19 +1,11 @@
 {
-  "name": "myapp",
-  "version": "0.0.1",
-  "description": "my first socket.io app",
+  "name": "js-game-demo",
+  "version": "1.0.0",
+  "dependencies": {
+    "socket.io": "1.7.2",
+    "express": "4.14.1"
+  },
   "scripts": {
     "start": "node server.js"
-  },
-  "dependencies": {
-    "express": "^4.15.2",
-    "socket.io": "^1.7.3",
-    "body-parser": "~1.17.1",
-    "cookie-parser": "~1.4.3",
-    "debug": "~2.6.3",
-    "express": "~4.15.2",
-    "morgan": "~1.8.1",
-    "pug": "~2.0.0-beta11",
-    "serve-favicon": "~2.4.2"
   }
 }

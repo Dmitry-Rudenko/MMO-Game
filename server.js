@@ -1,56 +1,90 @@
 var express = require('express');
-var app = express();
-var server = require('http').Server(app);
-var io = require('socket.io').listen(server);
+var app = require('express')();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
 var port = process.env.PORT || 3000;
 
-app.use('/css', express.static(__dirname + '/css'));
-app.use('/js', express.static(__dirname + '/js'));
-app.use('/img', express.static(__dirname + '/img'));
+var players = {};
 
+io.on("connection", function(socket) {
+	console.log('an user connected ' + socket.id);
+	
+	players[socket.id] = {
+		"x": Math.floor(Math.random(1) * 750),
+		"y": Math.floor(Math.random(1) * 550),
+		"width": 32, "height": 32,
+		"live": true
+	};
+	
+	io.sockets.emit('add_player', JSON.stringify({
+		"id": socket.id,
+		"player": players[socket.id]
+	}));
+	
+	socket.emit('add_players', JSON.stringify(players));
+	
+	socket.on('disconnect', function () {
+		console.log("an user disconnected " + socket.id);
 
-app.get('/', function(req, res) {
-    res.sendFile(__dirname + '/index.html');
+		delete players[socket.id];
+		io.sockets.emit('player_disconnect', socket.id);
+	});
+
+	socket.on('player_move', function (data) {
+		data = JSON.parse(data);
+
+		// default values
+		data.x = 0;
+		data.y = 0;
+
+		switch(data.character) {
+			case "W":
+				data.y = -5;
+				players[data.id].y -= 5;
+				break;
+			case "S":
+				data.y = 5;
+				players[data.id].y += 5;
+				break;
+			case "A":
+				data.x = -5;
+				players[data.id].x -= 5;
+				break;
+			case "D":
+				data.x = 5;
+				players[data.id].x += 5;
+				break;
+		}
+		
+		io.sockets.emit('player_position_update', JSON.stringify(data));
+	});
+
+	/*socket.on('player_rotation', function (data) {
+		io.sockets.emit('player_rotation_update', JSON.stringify({
+			"id": socket.id,
+			"value": data
+		}));
+		players[socket.id].rotation = data;
+	});*/
+
+	socket.on('shots_fired', function (id) {
+		//console.log(id + " identifed player has fired");
+		io.sockets.emit("player_fire_add", id);
+	});
+	
+	socket.on('player_killed', function (victimId) {
+		//console.log("player killed: " + data.victimId);
+		io.sockets.emit('clean_dead_player', victimId);
+		players[victimId].live = false;
+		//delete players[data.victimId];
+	});
 });
 
-server.lastPlayderID = 0;
-
-io.on('connection', function(socket) {
-    console.log('an user connected ' + socket.id);
-    socket.on('newplayer', function() {
-        socket.player = {
-            id: server.lastPlayderID++,
-            x: randomInt(10, 1000),
-            y: randomInt(10, 500)
-        };
-        console.log("PlayerID - " + socket.player.id);
-        socket.emit('allplayers', getAllPlayers());
-        socket.broadcast.emit('newplayer', socket.player);
-        socket.on('disconnect', function() {
-            console.log("an user disconnected " + socket.id);
-            io.emit('remove', socket.player.id);
-        });
-
-        socket.on('eventServer', function(data) {
-            socket.emit('eventClient', { id : socket.player.id, x : data.unit_x, y : data.unit_y });
-        });
-
-    });
+app.use("/", express.static(__dirname + "/public"));
+app.get("/", function (req, res) {
+	res.sendFile(__dirname + "/public/index.html");
 });
 
-function getAllPlayers() {
-    var players = [];
-    Object.keys(io.sockets.connected).forEach(function(socketID) {
-        var player = io.sockets.connected[socketID].player;
-        if (player) players.push(player);
-    });
-    return players;
-}
-
-function randomInt(low, high) {
-    return Math.floor(Math.random() * (high - low) + low);
-}
-
-server.listen(port, function() { // Listens to port 3000
-    console.log('Listening on ' + port);
+http.listen(port, function () {
+	console.log('listening on *:' + port);
 });
