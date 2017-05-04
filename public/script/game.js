@@ -2,30 +2,33 @@ var socket, players = {},
     live, bg, keybord, naMe, unit_name;
 var game = new Phaser.Game(1000, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 var style = { font: "25px Arial", fill: "white" };
-naMe = "Player"; //prompt('Введите Ваше имя: ', '');
+var group;
 
 
 function preload() {
     game.load.image("player", "img/red.png");
     game.load.image("bullet", "img/bullet.png");
+    game.load.image("point", "img/platform.png");
     //game.load.image("map", "img/grass.jpg")
+
 }
 
 function create() {
     socket = io.connect(window.location.host);
     game.physics.startSystem(Phaser.Physics.ARCADE);
-    //bg = game.add.tileSprite(0, 0, 1000, 600, 'map');
+    //bg = game.add.tileSprite(0, 0, 1000, 600, 'map');   
+    group = game.add.physicsGroup();
 
-
-
-
+    for (var i = 0; i < 20; i++) {
+        var c = group.create(game.rnd.between(100, 770), game.rnd.between(0, 570), 'point', 17);
+    }
 
     socket.on("add_players", function(data) {
         data = JSON.parse(data);
 
         for (let playerId in data) {
             if (players[playerId] == null && data[playerId].live) {
-                addPlayer(playerId, data[playerId].x, data[playerId].y);
+                addPlayer(playerId, data[playerId].x, data[playerId].y, data[playerId].name);
             }
         }
         live = true;
@@ -33,9 +36,9 @@ function create() {
 
     socket.on("add_player", function(data) {
         data = JSON.parse(data);
-
+        console.log(data);
         if (data.player.live) {
-            addPlayer(data.id, data.player.x, data.player.y);
+            addPlayer(data.id, data.player.x, data.player.y, data.player.name);
         }
     });
 
@@ -51,13 +54,14 @@ function create() {
 
     });
 
-    /*socket.on("player_rotation_update", function (data) {
+    socket.on("player_rotation_update", function(data) {
         data = JSON.parse(data);
         players[data.id].player.rotation = data.value;
-    });*/
+    });
 
     socket.on('player_disconnect', function(id) {
         players[id].player.kill();
+        players[id].unit_name.kill();
         //delete players[id];
     });
 
@@ -77,24 +81,27 @@ function create() {
         //players[victimId].weapon.kill();
         //delete players[victimId];
     });
-
     keybord = game.input.keyboard.createCursorKeys();
 }
+
+
 
 function update() {
     if (live) {
         characterController();
-
-        //players[socket.id].player.rotation = game.physics.arcade.angleToPointer(players[socket.id].player);
-        //socket.emit("player_rotation", players[socket.id].player.rotation);
+        players[socket.id].player.rotation = game.physics.arcade.angleToPointer(players[socket.id].player);
+        socket.emit("player_rotation", players[socket.id].player.rotation);
+        game.physics.arcade.collide(players[socket.id].player, group, collisionHandler, null, this)     
+        
     }
     setCollisions();
 }
 
 function unitsHitHandler(player) {
     socket.emit("player_killed", player.id);
-
-
+}
+function collisionHandler(player, veg){
+    veg.kill();
 }
 
 function setCollisions() {
@@ -136,23 +143,20 @@ function characterController() {
     }
 }
 
-function addPlayer(playerId, x, y) {
+function addPlayer(playerId, x, y, name) {
     let player = game.add.sprite(x, y, "player");
-    unit_name = game.add.text(x, y, naMe, style);
+    unit_name = game.add.text(x, y, name, style);
     unit_name.anchor.setTo(0.5, 1);
     game.physics.enable(player, Phaser.Physics.ARCADE);
-
-
-
     player.anchor.set(0.5);
     player.body.drag.set(70);
-
-    let weapon = game.add.weapon(30, 'bullet');
-    weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
-    weapon.bulletSpeed = 600;
-    weapon.fireRate = 100;
-
-    weapon.trackSprite(player, 0, 0, true);
     player.id = playerId;
-    players[playerId] = { player, weapon, unit_name };
+    players[playerId] = { player, unit_name };
+    game.camera.follow(player, Phaser.Camera.FOLLOW_TOPDOWN);
 }
+
+function render() {
+
+}
+
+
