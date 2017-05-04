@@ -5,6 +5,7 @@ var io = require('socket.io')(http);
 var port = process.env.PORT || 3000;
 
 var players = {};
+var veg_coord;
 var i = 1;
 io.on("connection", function(socket) {
 	console.log('an user connected ' + socket.id);
@@ -15,6 +16,22 @@ io.on("connection", function(socket) {
 		"width": 32, "height": 32,
 		"live": true, "name" : "Player " + i++  
 	};
+
+
+		setInterval(function(){
+		veg_coord = {
+    	"x": Math.floor(Math.random(1) * 750),
+    	"y": Math.floor(Math.random(1) * 550)
+		}
+
+		io.sockets.emit("eventClient", JSON.stringify({
+ 	   "coord": veg_coord
+		}))}, 10000)
+
+		
+	
+
+	
 
 	io.sockets.emit('add_player', JSON.stringify({
 		"id": socket.id,
@@ -28,10 +45,7 @@ io.on("connection", function(socket) {
 		delete players[socket.id];
 		io.sockets.emit('player_disconnect', socket.id);
 	});
-
-	socket.on("yes", function(data){
-		socket.emit("send_yes", data);
-	});
+	
 	
 	socket.on('player_move', function (data) {
 		data = JSON.parse(data);
@@ -80,6 +94,10 @@ io.on("connection", function(socket) {
 		io.sockets.emit('clean_dead_player', victimId);
 		players[victimId].live = false;
 		//delete players[data.victimId];
+	});
+
+	socket.on('player_grow', function (growId) {
+		io.sockets.emit('grow_player', growId);	
 	});
 
 

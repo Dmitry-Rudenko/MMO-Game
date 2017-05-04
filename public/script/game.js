@@ -3,7 +3,7 @@ var socket, players = {},
 var game = new Phaser.Game(1000, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 var style = { font: "25px Arial", fill: "white" };
 var group;
-
+var z = 1;
 
 function preload() {
     game.load.image("player", "img/red.png");
@@ -17,11 +17,7 @@ function create() {
     socket = io.connect(window.location.host);
     game.physics.startSystem(Phaser.Physics.ARCADE);
     //bg = game.add.tileSprite(0, 0, 1000, 600, 'map');   
-    group = game.add.physicsGroup();
 
-    for (var i = 0; i < 20; i++) {
-        var c = group.create(game.rnd.between(100, 770), game.rnd.between(0, 570), 'point', 17);
-    }
 
     socket.on("add_players", function(data) {
         data = JSON.parse(data);
@@ -59,15 +55,19 @@ function create() {
         players[data.id].player.rotation = data.value;
     });
 
+
+
     socket.on('player_disconnect', function(id) {
         players[id].player.kill();
         players[id].unit_name.kill();
         //delete players[id];
     });
 
-    /*socket.on('player_fire_add', function (id) {
-        players[id].weapon.fire();
-    });*/
+    socket.on('eventClient', function(data) {
+            data = JSON.parse(data);
+            createVeg(data.coord.x, data.coord.y);
+    });
+
 
     socket.on('clean_dead_player', function(victimId) {
         if (victimId == socket.id) {
@@ -81,6 +81,14 @@ function create() {
         //players[victimId].weapon.kill();
         //delete players[victimId];
     });
+
+    socket.on('grow_player', function(growId) {
+        var size_scale = z / 10;
+        players[growId].player.scale.set(1 + size_scale, 1 + size_scale);
+        z++;
+
+    });
+
     keybord = game.input.keyboard.createCursorKeys();
 }
 
@@ -91,8 +99,8 @@ function update() {
         characterController();
         players[socket.id].player.rotation = game.physics.arcade.angleToPointer(players[socket.id].player);
         socket.emit("player_rotation", players[socket.id].player.rotation);
-        game.physics.arcade.collide(players[socket.id].player, group, collisionHandler, null, this)     
-        
+        game.physics.arcade.collide(players[socket.id].player, group, collisionHandler, null, this)
+
     }
     setCollisions();
 }
@@ -100,9 +108,13 @@ function update() {
 function unitsHitHandler(player) {
     socket.emit("player_killed", player.id);
 }
-function collisionHandler(player, veg){
+
+function collisionHandler(player, veg) {
     veg.kill();
+    socket.emit("player_grow", player.id);
 }
+
+
 
 function setCollisions() {
     for (let x in players) {
@@ -152,11 +164,14 @@ function addPlayer(playerId, x, y, name) {
     player.body.drag.set(70);
     player.id = playerId;
     players[playerId] = { player, unit_name };
-    game.camera.follow(player, Phaser.Camera.FOLLOW_TOPDOWN);
+    game.camera.follow(players[playerId].player, Phaser.Camera.FOLLOW_PLATFORMER);
+}
+
+function createVeg(x, y) {
+    group = game.add.sprite(x, y, 'point');
+    game.physics.enable(group, Phaser.Physics.ARCADE);
 }
 
 function render() {
 
 }
-
-
