@@ -4,6 +4,7 @@ var game = new Phaser.Game(1000, 600, Phaser.AUTO, '', { preload: preload, creat
 var style = { font: "25px Arial", fill: "white" };
 var point = [];
 var z = 1;
+var fix_size = 1;
 
 function preload() {
     game.load.image("player", "img/red.png");
@@ -21,7 +22,6 @@ function create() {
 
     socket.on("add_players", function(data) {
         data = JSON.parse(data);
-
         for (let playerId in data) {
             if (players[playerId] == null && data[playerId].live) {
                 addPlayer(playerId, data[playerId].x, data[playerId].y, data[playerId].name);
@@ -63,7 +63,7 @@ function create() {
         //delete players[id];
     });
 
-    socket.on('eventClient', function(data) {
+    socket.on('create_veg', function(data) {
             data = JSON.parse(data);
             createVeg(data.id, data.coord.x, data.coord.y);
     });
@@ -82,10 +82,13 @@ function create() {
         //delete players[victimId];
     });
 
-    socket.on('grow_player', function(growId) {
-        var size_scale = z / 10;
-        players[growId].player.scale.set(1 + size_scale, 1 + size_scale);
-        z++;
+    socket.on('grow_player', function(data) {
+        data = JSON.parse(data);
+        
+        var size_scale = data.size / 10;
+        fix_size = fix_size + size_scale;
+        players[data.id].player.scale.set(fix_size, fix_size);
+        
 
     });
 

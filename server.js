@@ -8,6 +8,7 @@ var players = {};
 var veg_coord;
 var i = 1;
 var z = 1;
+var size = 1;
 io.on("connection", function(socket) {
 	console.log('an user connected ' + socket.id);
 
@@ -25,16 +26,12 @@ io.on("connection", function(socket) {
     	"y": Math.floor(Math.random(1) * 550)
 		}
 
-		io.sockets.emit("eventClient", JSON.stringify({
+		io.sockets.emit("create_veg", JSON.stringify({
 	   "id" : z,
  	   "coord": veg_coord
 		}))
 		z++;
-		}, 10000)
-
-		
-	
-
+		}, 5000)
 	
 
 	io.sockets.emit('add_player', JSON.stringify({
@@ -100,8 +97,12 @@ io.on("connection", function(socket) {
 		//delete players[data.victimId];
 	});
 
-	socket.on('player_grow', function (growId) {
-		io.sockets.emit('grow_player', growId);	
+	socket.on('player_grow', function (data) {
+		
+		io.sockets.emit('grow_player', JSON.stringify({
+			"id" : data,
+			"size" : size
+		}));	
 	});
 
 
