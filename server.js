@@ -7,6 +7,7 @@ var port = process.env.PORT || 3000;
 var players = {};
 var veg_coord;
 var i = 1;
+var z = 1;
 io.on("connection", function(socket) {
 	console.log('an user connected ' + socket.id);
 
@@ -25,8 +26,11 @@ io.on("connection", function(socket) {
 		}
 
 		io.sockets.emit("eventClient", JSON.stringify({
+	   "id" : z,
  	   "coord": veg_coord
-		}))}, 10000)
+		}))
+		z++;
+		}, 10000)
 
 		
 	

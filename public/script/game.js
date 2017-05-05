@@ -2,7 +2,7 @@ var socket, players = {},
     live, bg, keybord, naMe, unit_name;
 var game = new Phaser.Game(1000, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 var style = { font: "25px Arial", fill: "white" };
-var group;
+var point = [];
 var z = 1;
 
 function preload() {
@@ -65,7 +65,7 @@ function create() {
 
     socket.on('eventClient', function(data) {
             data = JSON.parse(data);
-            createVeg(data.coord.x, data.coord.y);
+            createVeg(data.id, data.coord.x, data.coord.y);
     });
 
 
@@ -99,7 +99,7 @@ function update() {
         characterController();
         players[socket.id].player.rotation = game.physics.arcade.angleToPointer(players[socket.id].player);
         socket.emit("player_rotation", players[socket.id].player.rotation);
-        game.physics.arcade.collide(players[socket.id].player, group, collisionHandler, null, this)
+        game.physics.arcade.collide(players[socket.id].player, point, collisionHandler, null, this)
 
     }
     setCollisions();
@@ -167,9 +167,9 @@ function addPlayer(playerId, x, y, name) {
     game.camera.follow(players[playerId].player, Phaser.Camera.FOLLOW_PLATFORMER);
 }
 
-function createVeg(x, y) {
-    group = game.add.sprite(x, y, 'point');
-    game.physics.enable(group, Phaser.Physics.ARCADE);
+function createVeg(id ,x, y) {
+    point[id] = game.add.sprite(x, y, 'point');
+    game.physics.enable(point[id], Phaser.Physics.ARCADE);
 }
 
 function render() {
