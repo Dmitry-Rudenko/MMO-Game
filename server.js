@@ -84,8 +84,9 @@ io.on("connection", function(socket) {
 		players[socket.id].rotation = data;
 	});
 
-	socket.on("kill_point", function(point){
-		console.log(point);
+	socket.on("point_kill", function(pointDeadId){
+		console.log(pointDeadId);
+		io.sockets.emit('clean_dead_point', pointDeadId);
 	});
 
 	

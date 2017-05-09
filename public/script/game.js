@@ -1,23 +1,26 @@
+var width = window.innerWidth;
+var height = window.innerHeight;
+console.log(width);
 var socket, players = {},
     live, bg, keybord, naMe, unit_name;
-var game = new Phaser.Game(1000, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+var game = new Phaser.Game(width, height, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 var style = { font: "25px Arial", fill: "white" };
-var point = [];
+var points = {};
 
 
 
 function preload() {
-    game.load.image("player", "img/red.png");
-    game.load.image("bullet", "img/bullet.png");
-    game.load.image("point", "img/platform.png");
-    //game.load.image("map", "img/grass.jpg")
+    //game.load.image("player", "img/red.png");
+    game.load.spritesheet('player', 'img/unit_sprite.png', 84, 84, 6);
+    game.load.spritesheet("point", "img/point.png", 64, 53, 8);
+    game.load.image("map", "img/sky.jpg")
 
 }
 
 function create() {
     socket = io.connect(window.location.host);
     game.physics.startSystem(Phaser.Physics.ARCADE);
-    //bg = game.add.tileSprite(0, 0, 1000, 600, 'map');   
+    bg = game.add.tileSprite(0, 0, 3000, 1000, 'map');   
 
 
     socket.on("add_players", function(data) {
@@ -96,6 +99,10 @@ function create() {
         players[data.id].player.scale.set(data.size, data.size);
     });
 
+    socket.on('clean_dead_point', function(pointDeadId){
+        points[pointDeadId].point.kill();
+    });
+
     keybord = game.input.keyboard.createCursorKeys();
 }
 
@@ -104,9 +111,9 @@ function update() {
         characterController();
         players[socket.id].player.rotation = game.physics.arcade.angleToPointer(players[socket.id].player);
         socket.emit("player_rotation", players[socket.id].player.rotation);
-        game.physics.arcade.collide(players[socket.id].player, point, collisionHandler, null, this)
 
     }
+    pointCollisions();
     setCollisions();
 }
 
@@ -115,7 +122,8 @@ function unitsHitHandler(player) {
 }
 
 function collisionHandler(player, point) {
-    point.kill();
+    console.log(point.id);
+    socket.emit("point_kill", point.id);
     
 
     socket.emit("player_grow", JSON.stringify({
@@ -123,6 +131,14 @@ function collisionHandler(player, point) {
         "size": player.size
     }));
 
+}
+
+function pointCollisions() {
+    for (let x in players) {
+        for (let y in points) {
+            game.physics.arcade.collide(players[x].player, points[y].point, collisionHandler, null, this)
+        }
+    }
 }
 
 function setCollisions() {
@@ -166,6 +182,8 @@ function characterController() {
 
 function addPlayer(playerId, x, y, name, size) {
     let player = game.add.sprite(x, y, "player");
+    var move = player.animations.add('move');
+    player.animations.play('move', 5, true);
     unit_name = game.add.text(x, y, name, style);
     unit_name.anchor.setTo(0.5, 1);
     game.physics.enable(player, Phaser.Physics.ARCADE);
@@ -178,9 +196,15 @@ function addPlayer(playerId, x, y, name, size) {
 }
 
 function createVeg(id, x, y) {
-    point[id] = game.add.sprite(x, y, 'point');
-    point[id].id = id;
-    game.physics.enable(point[id], Phaser.Physics.ARCADE);
+    let point = game.add.sprite(x, y, 'point');
+    var point_move = point.animations.add('point_move');
+    point.animations.play('point_move', 30, true);
+    game.physics.enable(point, Phaser.Physics.ARCADE);
+    point.anchor.set(0.5);
+    point.body.drag.set(70);
+    point.id = id;
+    points[id] = {point};
+    
 }
 
 function render() {
