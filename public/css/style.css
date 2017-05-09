@@ -175,7 +175,7 @@ canvas {
     display: block;
     opacity: 1;
     cursor: none !important;
-    /*animation: display_canvas 5s 1 ease;*/  
+    animation: display_canvas 10s 1 ease; 
 
 }
 
