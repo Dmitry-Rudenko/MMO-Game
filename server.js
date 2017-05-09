@@ -8,22 +8,21 @@ var players = {};
 var veg_coord;
 var i = 1;
 var z = 1;
-var size = 1;
 io.on("connection", function(socket) {
 	console.log('an user connected ' + socket.id);
 
 	players[socket.id] = {
 		"x": Math.floor(Math.random(1) * 750),
 		"y": Math.floor(Math.random(1) * 550),
-		"width": 32, "height": 32,
-		"live": true, "name" : "Player " + i++  
+		"width": 32, "height": 32, "size" : 1,
+		"live": true, "name" : "Player " + i++
 	};
 
 
 		setInterval(function(){
 		veg_coord = {
-    	"x": Math.floor(Math.random(1) * 750),
-    	"y": Math.floor(Math.random(1) * 550)
+    	"x": Math.floor(Math.random(1) * 1000),
+    	"y": Math.floor(Math.random(1) * 1000)
 		}
 
 		io.sockets.emit("create_veg", JSON.stringify({
@@ -31,7 +30,7 @@ io.on("connection", function(socket) {
  	   "coord": veg_coord
 		}))
 		z++;
-		}, 5000)
+		}, 15000);
 	
 
 	io.sockets.emit('add_player', JSON.stringify({
@@ -85,10 +84,10 @@ io.on("connection", function(socket) {
 		players[socket.id].rotation = data;
 	});
 
-	/*socket.on('shots_fired', function (id) {
-		//console.log(id + " identifed player has fired");
-		io.sockets.emit("player_fire_add", id);
-	});*/
+	socket.on("kill_point", function(point){
+		console.log(point);
+	});
+
 	
 	socket.on('player_killed', function (victimId) {
 		//console.log("player killed: " + data.victimId);
@@ -98,11 +97,15 @@ io.on("connection", function(socket) {
 	});
 
 	socket.on('player_grow', function (data) {
-		
-		io.sockets.emit('grow_player', JSON.stringify({
-			"id" : data,
-			"size" : size
-		}));	
+		data = JSON.parse(data);
+		var inSize = data.size;
+		var fraction = 0.1;
+		var outSize = inSize + fraction;
+		data.size = outSize;
+		//console.log(data.size);
+		players[data.id].size = outSize;
+
+		io.sockets.emit('grow_player', JSON.stringify(data));
 	});
 
 

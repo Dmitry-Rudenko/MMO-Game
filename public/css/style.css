@@ -173,6 +173,22 @@ canvas {
     bottom: 0;
     margin: auto;
     display: block;
+    opacity: 1;
     cursor: none !important;
-   
+    /*animation: display_canvas 5s 1 ease;*/  
+
+}
+
+@keyframes display_canvas {
+    0% {
+        opacity: 0;
+    }
+
+    95% {
+        opacity:  0;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }

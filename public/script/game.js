@@ -3,8 +3,8 @@ var socket, players = {},
 var game = new Phaser.Game(1000, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 var style = { font: "25px Arial", fill: "white" };
 var point = [];
-var z = 1;
-var fix_size = 1;
+
+
 
 function preload() {
     game.load.image("player", "img/red.png");
@@ -24,7 +24,7 @@ function create() {
         data = JSON.parse(data);
         for (let playerId in data) {
             if (players[playerId] == null && data[playerId].live) {
-                addPlayer(playerId, data[playerId].x, data[playerId].y, data[playerId].name);
+                addPlayer(playerId, data[playerId].x, data[playerId].y, data[playerId].name, data[playerId].size);
             }
         }
         live = true;
@@ -34,7 +34,7 @@ function create() {
         data = JSON.parse(data);
         console.log(data);
         if (data.player.live) {
-            addPlayer(data.id, data.player.x, data.player.y, data.player.name);
+            addPlayer(data.id, data.player.x, data.player.y, data.player.name, data.player.size);
         }
     });
 
@@ -64,8 +64,15 @@ function create() {
     });
 
     socket.on('create_veg', function(data) {
-            data = JSON.parse(data);
-            createVeg(data.id, data.coord.x, data.coord.y);
+        data = JSON.parse(data);
+        createVeg(data.id, data.coord.x, data.coord.y);
+        //console.log(point.id);
+
+        //setTimeout(function(){
+          //   point[point.id].kill();
+         //}, 5000);
+       
+
     });
 
 
@@ -84,18 +91,13 @@ function create() {
 
     socket.on('grow_player', function(data) {
         data = JSON.parse(data);
-        
-        var size_scale = data.size / 10;
-        fix_size = fix_size + size_scale;
-        players[data.id].player.scale.set(fix_size, fix_size);
-        
-
+        //console.log(data.size);
+        players[data.id].player.size = data.size;
+        players[data.id].player.scale.set(data.size, data.size);
     });
 
     keybord = game.input.keyboard.createCursorKeys();
 }
-
-
 
 function update() {
     if (live) {
@@ -112,12 +114,16 @@ function unitsHitHandler(player) {
     socket.emit("player_killed", player.id);
 }
 
-function collisionHandler(player, veg) {
-    veg.kill();
-    socket.emit("player_grow", player.id);
+function collisionHandler(player, point) {
+    point.kill();
+    
+
+    socket.emit("player_grow", JSON.stringify({
+        "id": player.id,
+        "size": player.size
+    }));
+
 }
-
-
 
 function setCollisions() {
     for (let x in players) {
@@ -158,7 +164,7 @@ function characterController() {
     }
 }
 
-function addPlayer(playerId, x, y, name) {
+function addPlayer(playerId, x, y, name, size) {
     let player = game.add.sprite(x, y, "player");
     unit_name = game.add.text(x, y, name, style);
     unit_name.anchor.setTo(0.5, 1);
@@ -166,12 +172,14 @@ function addPlayer(playerId, x, y, name) {
     player.anchor.set(0.5);
     player.body.drag.set(70);
     player.id = playerId;
+    player.size = size;
     players[playerId] = { player, unit_name };
     game.camera.follow(players[playerId].player, Phaser.Camera.FOLLOW_PLATFORMER);
 }
 
-function createVeg(id ,x, y) {
+function createVeg(id, x, y) {
     point[id] = game.add.sprite(x, y, 'point');
+    point[id].id = id;
     game.physics.enable(point[id], Phaser.Physics.ARCADE);
 }
 
